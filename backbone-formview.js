@@ -1,27 +1,36 @@
-//     Backbone.FormView 0.8.3
+//     FormView 0.8.3
 
 //     (c) 2014 James Ballantine, 1stdibs.com Inc.
-//     Backbone.FormView may be freely distributed under the MIT license.
+//     FormView may be freely distributed under the MIT license.
 //     For all details and documentation:
 //     https://github.com/1stdibs/backbone-base-and-form-view
-
-/*global Backbone, jQuery, _, window, exports, module, jQuery, require */
-(function (root) {
-    "use strict";
-
-    var Backbone = root.Backbone,
-        _ = root._;
-
+"use strict";
+(function (root, factory) {
     if (typeof module !== 'undefined') {
-        _ = require('underscore');
-        Backbone = require('./backbone-baseview');
-        module.exports = Backbone;
+        factory(
+            root,
+            module.exports,
+            require('backbone'),
+            require('./backbone-baseview'),
+            require('underscore'),
+            require('jquery')
+        );
+    } else {
+        if (!root.Backbone || !root.Backbone.BaseView) {
+            throw new Error('Backbone and Backbone.BaseView required');
+        }
+        factory(
+            root,
+            root.Backbone, // export directly onto Backbone
+            root.Backbone,
+            root.Backbone.BaseView,
+            root._,
+            root.Backbone.$
+        );
     }
 
-    if (!Backbone || !Backbone.BaseView) {
-        throw new Error('Backbone and Backbone.BaseView required');
-    }
-
+})(window || global, function (root, exports, Backbone, BaseView, _, $) {
+    "use strict";
     var
         FieldView,
         RadioListView,
@@ -53,8 +62,8 @@
              * Disables the form by invoking the disable method
              * on all fields that implement it. If a field doesn't
              * implement this method, it will not be disabled.
-             * @memberOf Backbone.FormView#
-             * @return {Backbone.FormView}
+             * @memberOf FormView#
+             * @return {FormView}
              */
             disable: function () {
                 this.subs.each(function (field) {
@@ -65,8 +74,8 @@
             /**
              * The reverse of disable, naturally. Invokes enable method
              * on all fields and field sets.
-             * @memberOf Backbone.FormView#
-             * @return {Backbone.FormView}
+             * @memberOf FormView#
+             * @return {FormView}
              */
             enable: function () {
                 this.subs.each(function (field) {
@@ -139,9 +148,9 @@
      * subviews automatically using a 'schema' and defining a framework to let you create elaborate 
      * forms with less code. You can define a schema by extending this view and specifying a 'schema'
      * prototype property, or by passing a 'schema' option when you initialize the view.
-     * @constructor Backbone.FormView
-     * @class Backbone.FormView
-     * @extends Backbone.BaseView
+     * @constructor FormView
+     * @class FormView
+     * @extends BaseView
      *
      * @property {Object} [options] - Options that you can pass to init or add as properties on extended view
      * @property {Function|String} [options.template]
@@ -215,18 +224,9 @@
      * }
      * 
      */
-    Backbone.FormView = Backbone.BaseView.extend({
+    var FormView = exports.FormView = BaseView.extend({
         tagName: 'form',
         className: 'form-horizontal',
-        fieldAlias: {
-            'Text' : 'Backbone.fields.FieldView',
-            'RadioList' : 'Backbone.fields.RadioListView',
-            'CheckList' : 'Backbone.fields.CheckListView',
-            'Select' : 'Backbone.fields.SelectListView',
-            'FieldSet' : 'Backbone.FieldSetView',
-            'Checkbox' : 'Backbone.fields.CheckBoxView',
-            'CollectionField' : 'Backbone.CollectionFieldSetView'
-        },
         template: _.template('<div data-fields=""></div>'),
         fieldsWrapper: '[data-fields]:first',
         initialize: function (options) {
@@ -252,9 +252,9 @@
         },
         /**
          * Set a new schema for the form.
-         * @memberOf Backbone.FormView#
+         * @memberOf FormView#
          * @param {Object} schema
-         * @return {Backbone.FormView}
+         * @return {FormView}
          */
         setSchema: function (schema) {
             this.schema = schema || this.schema;
@@ -268,9 +268,9 @@
          * SubViewManager is true by default with a FormView
          * and that will instantiate the SubViews when the
          * config is added.
-         * @memberOf Backbone.FormView#
+         * @memberOf FormView#
          * @param {object} config
-         * @return {Backbone.FormView}
+         * @return {FormView}
          */
         setSubViewConfig: function (config) {
             this.subViewConfig = config;
@@ -280,7 +280,7 @@
         /**
          * Should return true if fields have been
          * set up at least once.
-         * @memberOf Backbone.FormView#
+         * @memberOf FormView#
          * @return {Boolean}
          */
         hasSetupFields: function () {
@@ -290,8 +290,8 @@
          * Creates the subViewConfig property, derived from the
          * form's schema. The subViewConfig is like the schema
          * but fleshed out for the baseView's subView manager.
-         * @memberOf Backbone.FormView#
-         * @return {Backbone.FormView}
+         * @memberOf FormView#
+         * @return {FormView}
          */
         setupFields: function () {
             var config = this._setupSubViewConfig(result(this, 'schema'));
@@ -305,8 +305,8 @@
          * properties when the user exits a field, you can
          * use this method to set the values on the model
          * from the inputs all at once.
-         * @memberOf Backbone.FormView#
-         * @return {Backbone.FormView}
+         * @memberOf FormView#
+         * @return {FormView}
          */
         setModelAttrs: function () {
             this.subs.each(function (field) {
@@ -318,7 +318,7 @@
         },
         /**
          * Get the wrapper for the field subView elements
-         * @memberOf Backbone.FormView#
+         * @memberOf FormView#
          * @return {$} 
          */
         getFieldsWrapper: function () {
@@ -333,8 +333,8 @@
          * does that. Regardless, this method renders the shell template, and then renders all
          * subViews. If your template has an element with data-fields defined, the fields will be
          * appended to that. Otherwise they will be directly appended to the template.
-         * @memberOf Backbone.FormView#
-         * @return {Backbone.FormView}
+         * @memberOf FormView#
+         * @return {FormView}
          */
         render : function () {
             var order = this.options.fieldOrder || this.fieldOrder;
@@ -400,12 +400,12 @@
          * You have a view constructor DateFieldView and you want to 
          * make it easy to put that field in a schema, you can use this
          * static function to add an allias 'Date' for that constructor
-         * @memberOf Backbone.FormView
+         * @memberOf FormView
          * @param {String} alias     Name of the alias
          * @param {String|Function} construct Constructor used for the field
          */
         addFieldAlias: function (alias, construct) {
-            var aliases = {}, currAliases = Backbone.FormView.prototype.fieldAlias;
+            var aliases = {}, currAliases = FormView.prototype.fieldAlias;
             if (construct) {
                 aliases[alias] = construct;
             } else { aliases = alias; }
@@ -414,13 +414,13 @@
     });
 
     // Add disable/enable functionality
-    extend(Backbone.FormView.prototype, formViewDisableMixin);
+    extend(FormView.prototype, formViewDisableMixin);
 
     // ====================================================
     // CollectionFormView
 
     // CollectionFormRowView - used by CollectionFormView for each row
-    CollectionFormRowView = Backbone.CollectionFormRowView = Backbone.FormView.extend({
+    exports.CollectionFormRowView = CollectionFormRowView = FormView.extend({
         className: 'form-field-row controls-row',
         tagName: 'div',
         getFieldPrefix: function () {
@@ -433,15 +433,15 @@
         },
         /**
          * Asks the parent collection form view to delete this row
-         * @memberOf Backbone.CollectionFormRowView#
-         * @return {Backbone.CollectionFormRowView}
+         * @memberOf CollectionFormRowView#
+         * @return {CollectionFormRowView}
          */
         deleteSelf: function () {
             this.parentView.deleteRow(this);
             return this;
         },
         /**
-         * @memberOf Backbone.CollectionFormRowView#
+         * @memberOf CollectionFormRowView#
          * @return {number}
          *         The index of the row
          */
@@ -458,13 +458,13 @@
 
 
     /**
-     * Similar to Backbone.FormView, except that this form view will iterate
+     * Similar to FormView, except that this form view will iterate
      * over a collection and will produce a row for each model in the collection.
      * Each field in your schema will get a subView for each model in the collection.
-     * @constructor Backbone.CollectionFormView
-     * @extends Backbone.BaseView
-     * @class Backbone.CollectionFormView
-     * @property {Backbone.Collection} collection A Backbone.Collection used to create rows
+     * @constructor CollectionFormView
+     * @extends BaseView
+     * @class CollectionFormView
+     * @property {Collection} collection A Collection used to create rows
      * @property {object} [options] 
      *        Options that can either be set as properties on directly on the view or
      *        passed in an object to the constructor.
@@ -493,7 +493,7 @@
      *        or setupRows is called.
      * 
      */
-    Backbone.CollectionFormView = Backbone.BaseView.extend({
+    var CollectionFormView = exports.CollectionFormView = BaseView.extend({
         tagName: 'form',
         className: 'form',
         rowWrapper : '[data-rows]:first',
@@ -515,7 +515,7 @@
             } else {
                 self.rowConfig = clone(result(self, 'rowConfig')) || {
                     singleton: false,
-                    construct: Backbone.CollectionFormRowView
+                    construct: CollectionFormRowView
                 };
                 rowOpts = clone(result(self, 'rowOptions'));
                 self.rowConfig.options = rowOpts || self.rowConfig.options || {};
@@ -529,9 +529,9 @@
         },
         /**
          * Set the schema used for each row.
-         * @memberOf Backbone.CollectionFormView#
+         * @memberOf CollectionFormView#
          * @param {object} [schema]
-         * @return {Backbone.CollectionFormView}
+         * @return {CollectionFormView}
          */
         setRowSchema: function (schema) {
             if (!this.rowConfig.options) { this.rowConfig.options = {}; }
@@ -539,12 +539,12 @@
             return this;
         },
         /**
-         * Like Backbone.FormView.render, except that each a subView will be rendered
+         * Like FormView.render, except that each a subView will be rendered
          * for each field in the schema and for each model in the collection.
          * Each model in the collection will have a 'row' associated with it,
          * and each row will contain each of the fields in the schema.
-         * @memberOf Backbone.CollectionFormView#
-         * @return {Backbone.CollectionFormView}
+         * @memberOf CollectionFormView#
+         * @return {CollectionFormView}
          */
         render: function () {
             this.subs.detachElems();
@@ -557,7 +557,7 @@
         },
         /**
          * Get the wrapper element that the rows will be appended to
-         * @memberOf Backbone.CollectionFormView#
+         * @memberOf CollectionFormView#
          * @return {$} 
          */
         getRowWrapper: function () {
@@ -572,10 +572,10 @@
          * pass a model, one will be created from the collection.model
          * property constructor. The model(s) will then be tied
          * to the new row(s).
-         * @memberOf Backbone.CollectionFormView#
+         * @memberOf CollectionFormView#
          * @param  {Backbone.Model} model
          *         model A model to add a row for
-         * @return {Backbone.CollectionFormView}
+         * @return {CollectionFormView}
          */
         addRow: function (model) {
             var added;
@@ -597,7 +597,7 @@
          * @param  {Backbone.Model|Backbone.View|Backbone.View[]|Backbone.Model[]} obj
          *         Used to find models in the collection and views in the subViewManager
          *         and remove them.
-         * @return {Backbone.CollectionFormView}
+         * @return {CollectionFormView}
          */
         deleteRow : function (obj) {
             var model = (obj instanceof Model) ? obj : null,
@@ -623,8 +623,8 @@
          * Shortcut method to remove all rows and then
          * set them up again, render them, and place
          * them in the row wrapper
-         * @memberOf Backbone.CollectionFormView#
-         * @return {Backbone.CollectionFormView}
+         * @memberOf CollectionFormView#
+         * @return {CollectionFormView}
          */
         reset: function () {
             this.setupRows().subs.renderByKey('row', { appendTo: this.getRowWrapper() });
@@ -639,8 +639,8 @@
         /**
          * When you are ready to set up your rows (ie initialize
          * each Row view instance based on the collection
-         * @memberOf Backbone.CollectionFormView#
-         * @return {Backbone.CollectionFormView}
+         * @memberOf CollectionFormView#
+         * @return {CollectionFormView}
          */
         setupRows: function () {
             this.subs.remove('row');
@@ -661,7 +661,7 @@
     });
 
     // Add disable/enable functionality
-    extend(Backbone.CollectionFormView.prototype, formViewDisableMixin);
+    extend(CollectionFormView.prototype, formViewDisableMixin);
 
     // =====================================================================
     // FIELD SUBVIEWS
@@ -673,13 +673,13 @@
     // ===================================================
     // Field Template
 
-    Backbone.formTemplates = Backbone.formTemplates || {};
+    exports.formTemplates = {};
 
     // This is shell form template used for most of the standard form fields.
     // You can easily substitute your own by doing the following after loading
-    // this file: Backbone.formTemplates.Field = $('#template-id').html();
+    // this file: formTemplates.Field = $('#template-id').html();
     // Note that it uses bootstrap.css classes by default.
-    Backbone.formTemplates.Field =
+    exports.formTemplates.Field =
         '<% if (obj.label) { %><label class="control-label" ' +
             '<% if (obj.inputId) { %> for="<%= obj.inputId %>" <% } %> >' +
             '<%= obj.label %></label><% } %>' +
@@ -690,7 +690,7 @@
             '<% if (obj.help) { %><span class="help-block"><%= obj.help %></span><% } %>' +
             '</div>';
 
-    Backbone.fields = Backbone.fields || {};
+    exports.fields = {};
 
     // ===================================================
     // fields.FieldView
@@ -701,9 +701,9 @@
      * on the model when the blur event occurs. Use 'Text' alias in schema
      * to create fields with this contsructor.
      * 
-     * @constructor Backbone.fields.FieldView
-     * @extends Backbone.BaseView
-     * @class Backbone.fields.FieldView
+     * @constructor fields.FieldView
+     * @extends BaseView
+     * @class fields.FieldView
      * @property {object} [options]
      *           Options that can either be set as properties on directly on the view or
      *           passed in an object to the constructor.
@@ -730,12 +730,13 @@
      *      If you would like this field to re-render the input when model is updated by something other
      *      than this view, in addition to the normal behavior of the view updating the model
      */
-    FieldView = Backbone.fields.FieldView = Backbone.BaseView.extend({
+    var fields = exports.fields = {};
+    fields.FieldView = BaseView.extend({
         tagName: 'div',
         classDefaults: 'control-group form-field',
         inputPrefix: 'field-input-',
         fieldPrefix: 'form-field-',
-        template: _.template(Backbone.formTemplates.Field),
+        template: _.template(exports.formTemplates.Field),
         addId: true,
         elementType: 'input',
         inputWrapper: '[data-input]:first',
@@ -788,8 +789,8 @@
         /**
          * Sets up two way updating. The view updates the model by default, and this
          * function will update the view on a model change (unless it was done by the view)
-         * @memberOf Backbone.fields.FieldView#
-         * @return {Backbone.fields.FieldView}
+         * @memberOf fields.FieldView#
+         * @return {fields.FieldView}
          */
         setupTwoWay: function () {
             this.listenTo(this.model, 'change:' + this.fieldName, function () {
@@ -800,7 +801,7 @@
         },
         /**
          * Return an object of attributes as they should appear in the model
-         * @memberOf Backbone.fields.FieldView#
+         * @memberOf fields.FieldView#
          * @return {Object}
          */
         getAttrs: function () {
@@ -815,8 +816,8 @@
          * there is a setOpts object on the fieldView instance,
          * then use that as the options passed to Backbone.Model's
          * 'set' method.
-         * @memberOf Backbone.fields.FieldView#
-         * @return {Backbone.fields.FieldView}
+         * @memberOf fields.FieldView#
+         * @return {fields.FieldView}
          */
         setModelAttrs: function () {
             this._viewChangedModel = true;
@@ -825,19 +826,19 @@
         },
         /**
          * Get the value of the form field input.
-         * @memberOf Backbone.fields.FieldView
-         * @memberOf Backbone.fields.FieldView#
+         * @memberOf fields.FieldView
+         * @memberOf fields.FieldView#
          * @return {String|Boolean|Array|Number|Object}
          */
         getValue: function () {
-            return Backbone.$.trim(this.getInputEl().val());
+            return $.trim(this.getInputEl().val());
         },
         /**
          * Override this function if additional
          * logic needs to be performed to convert
          * the value of the input into what is
          * set on the model.
-         * @memberOf Backbone.fields.FieldView#
+         * @memberOf fields.FieldView#
          * @return {String|Boolean|Array|Number|Object}
          */
         getValueForSet: function () {
@@ -845,7 +846,7 @@
         },
         /**
          * Gets the value of the field as it appears in the model
-         * @memberOf Backbone.fields.FieldView#
+         * @memberOf fields.FieldView#
          * @return {String|Boolean|Array|Number|Object}
          */
         getModelVal: function () {
@@ -858,7 +859,7 @@
          * function if you want to convert the model 
          * value to something that should be set on the 
          * input.
-         * @memberOf Backbone.fields.FieldView#
+         * @memberOf fields.FieldView#
          * @return {String|Boolean|Array|Number|Object}
          */
         getValueForInput: function () {
@@ -868,9 +869,9 @@
          * Renders the basic shell template for the form field and then
          * creates the input or textarea element, which gets appended
          * to the elem in the shell template found through the
-         * {@link Backbone.fields.FieldView#getInputWrapper} method
-         * @memberOf Backbone.fields.FieldView#
-         * @return {Backbone.fields.FieldView}
+         * {@link fields.FieldView#getInputWrapper} method
+         * @memberOf fields.FieldView#
+         * @return {fields.FieldView}
          */
         render: function () {
             return this.renderWrapper().renderInput();
@@ -878,8 +879,8 @@
         /**
          * Renders the wrapper that contains the field input
          * @param {object} [vars] Variables to pass to wrapper template
-         * @memberOf Backbone.fields.FieldView#
-         * @return {Backbone.fields.FieldView}
+         * @memberOf fields.FieldView#
+         * @return {fields.FieldView}
          */
         renderWrapper: function (vars) {
             this.isDisabled = null;
@@ -889,15 +890,15 @@
         /**
          * Renders the field input and places it in the wrapper in
          * the element with the 'data-input' attribute
-         * @memberOf Backbone.fields.FieldView#
-         * @return {Backbone.fields.FieldView}
+         * @memberOf fields.FieldView#
+         * @return {fields.FieldView}
          */
         renderInput: function () {
             var $input,
                 id = this.inputId,
                 attrs =  this.addId ? { id : id, name: id } : {},
                 valForInput = this.getValueForInput();
-            $input = Backbone.$('<' + this.elementType + '>');
+            $input = $('<' + this.elementType + '>');
             if (this.elementType === 'input') { attrs.type = 'text'; }
             if (this.placeholder) { attrs.placeholder = this.placeholder; }
             $input.attr(extend(attrs, this.inputAttrs));
@@ -910,7 +911,7 @@
         /**
          * Get the element that wraps the input. Looks for element
          * with data-input attribute. If not found, it will return this.$el
-         * @memberOf Backbone.fields.FieldView#
+         * @memberOf fields.FieldView#
          * @return {$}
          */
         getInputWrapper: function () {
@@ -922,7 +923,7 @@
         },
         /**
          * Get the element that takes user input.
-         * @memberOf Backbone.fields.FieldView#
+         * @memberOf fields.FieldView#
          * @return {$} 
          */
         getInputEl: function () {
@@ -930,8 +931,8 @@
         },
         /**
          * Disable the input if not already disabled
-         * @memberOf Backbone.fields.FieldView#
-         * @return {Backbone.fields.FieldView}
+         * @memberOf fields.FieldView#
+         * @return {fields.FieldView}
          */
         disable: function () {
             this.getInputEl().prop('disabled', true);
@@ -940,8 +941,8 @@
         },
         /**
          * Enable the input if disabled by the 'disable' method
-         * @memberOf Backbone.fields.FieldView#
-         * @return {Backbone.fields.FieldView}
+         * @memberOf fields.FieldView#
+         * @return {fields.FieldView}
          */
         enable: function () {
             this.getInputEl().prop('disabled', false);
@@ -950,7 +951,7 @@
         },
         /**
          * Handle updates from a user interaction
-         * @memberOf Backbone.fields.FieldView#
+         * @memberOf fields.FieldView#
          * @protected
          */
         onUserUpdate: function () {
@@ -959,7 +960,7 @@
         /**
          * Generate the string to use for the id attribute of 
          * the input element.
-         * @memberOf Backbone.fields.FieldView#
+         * @memberOf fields.FieldView#
          * @return {string}
          * @protected
          */
@@ -969,7 +970,7 @@
         },
         /**
          * Get the template vars used for the wrapper template
-         * @memberOf Backbone.fields.FieldView#
+         * @memberOf fields.FieldView#
          * @return {object}
          * @protected
          */
@@ -978,7 +979,7 @@
          * If the parent FormView/FieldSetView defines a 'getFieldPrefix'
          * function, it can be used to construct the input id, name
          * attribute, and class attributes
-         * @memberOf Backbone.fields.FieldView#
+         * @memberOf fields.FieldView#
          * @return {string}
          * @private
          */
@@ -991,7 +992,7 @@
         /**
          * @param {string|number} valueForInput
          * @returns {boolean}
-         * @memberOf Backbone.fields.FieldView#
+         * @memberOf fields.FieldView#
          * @private
          */
         _shouldSetValueOnInput: function (valueForInput) {
@@ -1000,8 +1001,8 @@
     }, {
         /**
          * Set the default template for all fields that don't override
-         * the 'template' property of the Backbone.fields.FieldView
-         * @memberOf Backbone.fields.FieldView
+         * the 'template' property of the fields.FieldView
+         * @memberOf fields.FieldView
          * @param {function} template An underscore template
          * @static
          */
@@ -1014,24 +1015,24 @@
     // RadioListView
 
     /**
-     * Like Backbone.fields.FieldView, except it creates a list of radio buttons. Designed to
+     * Like fields.FieldView, except it creates a list of radio buttons. Designed to
      * work with model fields that have only one value out of a fixed set of values. Use
      * 'RadioList' alias in form schema to create a field with this constructor.
      *
-     * @augments {Backbone.fields.FieldView}
-     * @constructor Backbone.fields.RadioListView
-     * @class Backbone.fields.RadioListView
+     * @augments {fields.FieldView}
+     * @constructor fields.RadioListView
+     * @class fields.RadioListView
      * @property {object} [options] 
      *           Options that can either be set as properties on directly on the view or
      *           passed in an object to the constructor.
-     * @property {string} [options.fieldName] inherited from Backbone.fields.FieldView
-     * @property {string} [options.templateSrc] inherited from Backbone.fields.FieldView
-     * @property {function} [options.template] inherited from Backbone.fields.FieldView
-     * @property {object} [options.templateVars] inherited from Backbone.fields.FieldView
-     * @property {string} [options.inputId] inherited from Backbone.fields.FieldView
-     * @property {string} [options.inputClass] inherited from Backbone.fields.FieldView
-     * @property {boolean} [options.twoWay] inherited from Backbone.fields.FieldView
-     * @property {object} [options.inputAttrs] inherited from Backbone.fields.FieldView
+     * @property {string} [options.fieldName] inherited from fields.FieldView
+     * @property {string} [options.templateSrc] inherited from fields.FieldView
+     * @property {function} [options.template] inherited from fields.FieldView
+     * @property {object} [options.templateVars] inherited from fields.FieldView
+     * @property {string} [options.inputId] inherited from fields.FieldView
+     * @property {string} [options.inputClass] inherited from fields.FieldView
+     * @property {boolean} [options.twoWay] inherited from fields.FieldView
+     * @property {object} [options.inputAttrs] inherited from fields.FieldView
      * @property {object} [options.labelAttrs] Attributes for the label elements that wrap radio inputs
      * @property {object|function} [options.possibleVals]
      *      An object with the set of possible choices to display to the user. Each key will be
@@ -1039,7 +1040,7 @@
      *      will be used as the label text to display to the user.
      *
      */
-    RadioListView = Backbone.fields.RadioListView = Backbone.fields.FieldView.extend({
+    RadioListView = fields.RadioListView = fields.FieldView.extend({
         tagName: 'div',
         events : function () {
             var events = {};
@@ -1056,7 +1057,7 @@
         /**
          * Get the value of the radio list. Looks for a checked radio input
          * and gets the value attribute of that input.
-         * @memberOf Backbone.fields.RadioListView#
+         * @memberOf fields.RadioListView#
          * @return {string}
          */
         getValue: function () {
@@ -1072,8 +1073,8 @@
         },
         /**
          * Renders the radio inputs and appends them to the input wrapper.
-         * @memberOf Backbone.fields.RadioListView#
-         * @return {Backbone.fields.RadioListView}
+         * @memberOf fields.RadioListView#
+         * @return {fields.RadioListView}
          */
         renderInput: function () {
             var possibleVals = result(this, 'possibleVals'),
@@ -1104,8 +1105,8 @@
             if (isChecked) { attributes.checked = 'checked'; }
             extend(attributes, this.inputAttrs, { value: possibleVal.value });
             if (this.inputClass) { attributes['class'] = this.inputClass; }
-            $listItem = Backbone.$('<' + this.elementType + '>').attr(attributes);
-            $label = Backbone.$('<label>').attr(labelAttrs);
+            $listItem = $('<' + this.elementType + '>').attr(attributes);
+            $label = $('<label>').attr(labelAttrs);
             $label.append($listItem).append(possibleVal.display);
             return $label;
         },
@@ -1128,26 +1129,26 @@
     // SelectListView
 
     /**
-     * Like Backbone.fields.RadioListView, except that it creates a select drop down. Designed to
+     * Like fields.RadioListView, except that it creates a select drop down. Designed to
      * work with model fields that have one or several values out of a fixed set of values.
      * If you allow multi-select, the value will be an array. For single selects, the value
      * will be whatever the value of that one option is. Use type alias 'Select' to create
      * in the form schema to create a field with the select type.
      *
-     * @constructor Backbone.fields.SelectListView
-     * @augments {Backbone.fields.RadioListView}
-     * @class Backbone.fields.SelectListView
+     * @constructor fields.SelectListView
+     * @augments {fields.RadioListView}
+     * @class fields.SelectListView
      * @property {object} [options] 
      *           Options that can either be set as properties on directly on the view or
      *           passed in an object to the constructor.
-     * @property {string} [options.fieldName] inherited from Backbone.fields.RadioListView
-     * @property {string} [options.templateSrc] inherited from Backbone.fields.RadioListView
-     * @property {function} [options.template] inherited from Backbone.fields.RadioListView
-     * @property {object} [options.templateVars] inherited from Backbone.fields.RadioListView
-     * @property {string} [options.inputId] inherited from Backbone.fields.RadioListView
-     * @property {string} [options.inputClass] inherited from Backbone.fields.RadioListView
-     * @property {boolean} [options.inputAttrs] inherited from Backbone.fields.RadioListView
-     * @property {object} [options.twoWay] inherited from Backbone.fields.RadioListView
+     * @property {string} [options.fieldName] inherited from fields.RadioListView
+     * @property {string} [options.templateSrc] inherited from fields.RadioListView
+     * @property {function} [options.template] inherited from fields.RadioListView
+     * @property {object} [options.templateVars] inherited from fields.RadioListView
+     * @property {string} [options.inputId] inherited from fields.RadioListView
+     * @property {string} [options.inputClass] inherited from fields.RadioListView
+     * @property {boolean} [options.inputAttrs] inherited from fields.RadioListView
+     * @property {object} [options.twoWay] inherited from fields.RadioListView
      * @property {string} [options.placeholder] 
      *           Placeholder text for the select. If the user selects this value, the
      *           model will be set to a blank string.
@@ -1161,7 +1162,7 @@
      *      is set on the model.
      *
      */
-    SelectListView = Backbone.fields.SelectListView = Backbone.fields.RadioListView.extend({
+    SelectListView = fields.SelectListView = fields.RadioListView.extend({
         type: 'select-list',
         elementType: 'select',
         events : function () {
@@ -1179,7 +1180,7 @@
         },
         /**
          * Returns true or false if the option should be selected
-         * @memberOf Backbone.fields.SelectListView#
+         * @memberOf fields.SelectListView#
          * @param {string} key The key of the possibleVal that is being tested
          * @return {boolean}
          */
@@ -1190,13 +1191,13 @@
         },
         /**
          * Renders the select element and the options
-         * @memberOf Backbone.fields.SelectListView#
-         * @return {Backbone.fields.SelectListView}
+         * @memberOf fields.SelectListView#
+         * @return {fields.SelectListView}
          */
         renderInput: function () {
             var possibleVals = result(this, 'possibleVals'),
                 id = this.inputId,
-                $select = Backbone.$('<' + this.elementType + '>')
+                $select = $('<' + this.elementType + '>')
                     .attr(extend((this.addId ? { id: id, name: id } : {}), this.inputAttrs));
 
             this.getInputWrapper().html($select);
@@ -1213,10 +1214,10 @@
                 if (vals.hasOwnProperty(key)) {
                     val = this._parsePossibleVal(vals, key);
                     if (val.group) {
-                        $optgroup = Backbone.$('<optgroup label="' + key + '"></optgroup>').appendTo($wrapper);
+                        $optgroup = $('<optgroup label="' + key + '"></optgroup>').appendTo($wrapper);
                         this._renderInput($optgroup, val.group);
                     } else {
-                        $option = Backbone.$('<option>').text(val.display).attr('value', val.value);
+                        $option = $('<option>').text(val.display).attr('value', val.value);
                         if (this.isSelected(val.value)) {
                             $option.prop('selected', true);
                         }
@@ -1243,34 +1244,34 @@
     // CheckListView
 
     /**
-     * Like Backbone.fields.SelectListView, but instead of a select, it's a list of checkboxes.
+     * Like fields.SelectListView, but instead of a select, it's a list of checkboxes.
      * Additionally, instead of setting one value on the model, each checkbox represents
      * one attribute on the model assigned to it. Each of these attributes should expect
      * a boolean or one of a set of 2 possible values. You can set what these values 
      * are using the 'checkedVal' and 'unCheckedVal' options. Use the 'CheckList' alias
      * in your schema to create these views.
-     * @constructor Backbone.fields.CheckListView
-     * @augments {Backbone.fields.FieldView}
-     * @class Backbone.fields.CheckListView
+     * @constructor fields.CheckListView
+     * @augments {fields.FieldView}
+     * @class fields.CheckListView
      * @property {object} [options] 
      *           Options that can either be set as properties on directly on the view or
      *           passed in an object to the constructor.
-     * @property {string} [options.fieldName] inherited from Backbone.fields.FieldView
-     * @property {string} [options.templateSrc] inherited from Backbone.fields.FieldView
-     * @property {function} [options.template] inherited from Backbone.fields.FieldView
-     * @property {object} [options.templateVars] inherited from Backbone.fields.FieldView
-     * @property {string} [options.inputId] inherited from Backbone.fields.FieldView
-     * @property {string} [options.inputClass] inherited from Backbone.fields.FieldView
-     * @property {boolean} [options.twoWay] inherited from Backbone.fields.FieldView
-     * @property {object} [options.inputAttrs] inherited from Backbone.fields.FieldView
-     * @property {object} [options.labelAttrs] inherited from Backbone.fields.RadioListView
+     * @property {string} [options.fieldName] inherited from fields.FieldView
+     * @property {string} [options.templateSrc] inherited from fields.FieldView
+     * @property {function} [options.template] inherited from fields.FieldView
+     * @property {object} [options.templateVars] inherited from fields.FieldView
+     * @property {string} [options.inputId] inherited from fields.FieldView
+     * @property {string} [options.inputClass] inherited from fields.FieldView
+     * @property {boolean} [options.twoWay] inherited from fields.FieldView
+     * @property {object} [options.inputAttrs] inherited from fields.FieldView
+     * @property {object} [options.labelAttrs] inherited from fields.RadioListView
      * @property {object|function} [options.possibleVals]
      *      An object with the set of possible choices to display to the user. Unlike the other
      *      list views, the key should be what field the choice corresponds to on the model.
      * @property [options.checkedVal] - the value to set on the model when a checkbox is checked
      * @property [options.unCheckedVal] - the value to set on the model when a checkbox is unchecked
      */
-    CheckListView = Backbone.fields.CheckListView = Backbone.fields.RadioListView.extend({
+    CheckListView = fields.CheckListView = fields.RadioListView.extend({
         tagName: 'div',
         type: 'check-list',
         checkedVal: true,
@@ -1294,7 +1295,7 @@
         getAttrs: function () {
             var attrs = {}, self = this;
             this.getInputEl().each(function (index, input) {
-                var $input = Backbone.$(input),
+                var $input = $(input),
                     key = $input.val(),
                     val = ($input.prop('checked')) ? self.checkedVal : self.unCheckedVal;
                 if (val === self.checkedVal || self.isSelected(key)) {
@@ -1314,7 +1315,7 @@
         },
         /**
          * Renders and returns a single checkbox in a CheckList
-         * @memberOf Backbone.fields.CheckListView#
+         * @memberOf fields.CheckListView#
          * @param {string} possibleVal the key from possibleVals
          * @param {boolean} isChecked if the box should be checked or not
          * @param {number} index the index of the checkbox
@@ -1330,13 +1331,13 @@
             attributes = extend(attributes, this.inputAttrs);
             if (this.inputClass) { attributes['class'] = this.inputClass; }
             if (isChecked) { attributes.checked = 'checked'; }
-            $listItem = Backbone.$('<input>').attr(attributes);
-            $label = Backbone.$('<label>').attr(defaults(this.labelAttrs || {}, { 'class': 'checkbox' }));
+            $listItem = $('<input>').attr(attributes);
+            $label = $('<label>').attr(defaults(this.labelAttrs || {}, { 'class': 'checkbox' }));
             return $label.append($listItem).append(possibleVal.display);
         },
         /**
          * Returns true or false if the checkbox should be selected.
-         * @memberOf Backbone.fields.CheckListView#
+         * @memberOf fields.CheckListView#
          * @param {string} key the key of the possibleVal that is being tested
          * @return {boolean}
          */
@@ -1370,28 +1371,28 @@
 
     /**
      * Creates a single checkbox that corresponds to one attribute in the model
-     * @constructor Backbone.fields.CheckBoxView
-     * @class Backbone.fields.CheckBoxView
-     * @augments {Backbone.fields.FieldView}
+     * @constructor fields.CheckBoxView
+     * @class fields.CheckBoxView
+     * @augments {fields.FieldView}
      * @property {object} [options] 
      *           Options that can either be set as properties on directly on the view or
      *           passed in an object to the constructor.
-     * @property {string} [options.fieldName] inherited from Backbone.fields.FieldView
-     * @property {string} [options.templateSrc] inherited from Backbone.fields.FieldView
-     * @property {function} [options.template] inherited from Backbone.fields.FieldView
-     * @property {object} [options.templateVars] inherited from Backbone.fields.FieldView
-     * @property {string} [options.inputId] inherited from Backbone.fields.FieldView
-     * @property {string} [options.inputClass] inherited from Backbone.fields.FieldView
-     * @property {boolean} [options.twoWay] inherited from Backbone.fields.FieldView
-     * @property {object} [options.addId] inherited from Backbone.fields.FieldView
-     * @property {object} [options.labelAttrs] inherited from Backbone.fields.RadioListView
+     * @property {string} [options.fieldName] inherited from fields.FieldView
+     * @property {string} [options.templateSrc] inherited from fields.FieldView
+     * @property {function} [options.template] inherited from fields.FieldView
+     * @property {object} [options.templateVars] inherited from fields.FieldView
+     * @property {string} [options.inputId] inherited from fields.FieldView
+     * @property {string} [options.inputClass] inherited from fields.FieldView
+     * @property {boolean} [options.twoWay] inherited from fields.FieldView
+     * @property {object} [options.addId] inherited from fields.FieldView
+     * @property {object} [options.labelAttrs] inherited from fields.RadioListView
      * @property {string} [options.displayText] 
      *           Templates can have a label and/or display text for checkboxes. Display text is
      *           intended for longer desciptions of the textbox's purpose.
      * @property [options.checkedVal] - the value to set on the model when a checkbox is checked
      * @property [options.unCheckedVal] - the value to set on the model when a checkbox is unchecked
      */
-    CheckBoxView = Backbone.fields.CheckBoxView = Backbone.fields.FieldView.extend({
+    CheckBoxView = fields.CheckBoxView = fields.FieldView.extend({
         checkedVal: true,
         unCheckedVal: false,
         events: function () {
@@ -1418,15 +1419,15 @@
         },
         /**
          * Returns true or false if the checkbox should be selected
-         * @memberOf Backbone.fields.CheckBoxView#
+         * @memberOf fields.CheckBoxView#
          * @return {boolean}
          */
         isSelected: function () {
             return this.getModelVal() === this.checkedVal;
         },
         renderInput: function () {
-            var $label = Backbone.$('<label>').attr(defaults(this.labelAttrs || {}, { 'class': 'checkbox' })),
-                $input = Backbone.$('<' + this.elementType + '>'),
+            var $label = $('<label>').attr(defaults(this.labelAttrs || {}, { 'class': 'checkbox' })),
+                $input = $('<' + this.elementType + '>'),
                 attributes = { type: 'checkbox' },
                 id = this.inputId;
 
@@ -1451,26 +1452,26 @@
     // FieldSetView
 
     /**
-     * Essentially a subform, an extension of {@link Backbone.FormView} 
+     * Essentially a subform, an extension of {@link FormView} 
      * but simply uses a 'fieldset' tag instead. Can be used an a FormView's
      * schema to group fields. FieldSets also default to setup their 
      * fields on initialization so that that the top level FormView only 
      * has to call setupFields once.
-     * @constructor Backbone.FieldSetView
-     * @extends {Backbone.FormView}
-     * @class Backbone.FieldSetView
+     * @constructor FieldSetView
+     * @extends {FormView}
+     * @class FieldSetView
      * @property {Object} [options] 
      *     Options that you can pass to init or add as properties on extended view
-     * @property {String} [options.templateSrc] Inherited from Backbone.FormView
-     * @property {String} [options.template] Inherited from Backbone.FormView
-     * @property {Object} [options.schema] Inherited from Backbone.FormView
-     * @property {Boolean} [options.setupOnInit] Inherited from Backbone.FormView
-     * @property {String[]} [options.fieldOrder] Inherited from Backbone.FormView
-     * @property {Object} [options.templateVars] Inherited from Backbone.FormView
-     * @property {Boolean} [options.autoUpdateModel] Inherited from Backbone.FormView
-     * @property {Boolean} [options.twoWay] Inherited from Backbone.FormView
+     * @property {String} [options.templateSrc] Inherited from FormView
+     * @property {String} [options.template] Inherited from FormView
+     * @property {Object} [options.schema] Inherited from FormView
+     * @property {Boolean} [options.setupOnInit] Inherited from FormView
+     * @property {String[]} [options.fieldOrder] Inherited from FormView
+     * @property {Object} [options.templateVars] Inherited from FormView
+     * @property {Boolean} [options.autoUpdateModel] Inherited from FormView
+     * @property {Boolean} [options.twoWay] Inherited from FormView
      */
-    FieldSetView = Backbone.FieldSetView = Backbone.FormView.extend({
+    FieldSetView = exports.FieldSetView = FormView.extend({
         tagName: 'div',
         setupOnInit: true,
         className: '',
@@ -1483,7 +1484,7 @@
         /**
          * Returns a prefix that the fieldset fields can use to create
          * their unique names and ids
-         * @memberOf Backbone.FieldSetView#
+         * @memberOf FieldSetView#
          * @return {string}
          */
         getFieldPrefix: getFieldPrefix,
@@ -1494,11 +1495,11 @@
     /**
      * Like a FieldSet view, except that it's linked to a collection and will add subviews for
      * each model in the collection based on the 'schema' option provided
-     * @constructor Backbone.CollectionFieldSetView
-     * @extends {Backbone.CollectionFormView}
-     * @class Backbone.CollectionFieldSetView
+     * @constructor CollectionFieldSetView
+     * @extends {CollectionFormView}
+     * @class CollectionFieldSetView
      */
-    CollectionFieldSetView = Backbone.CollectionFieldSetView = Backbone.CollectionFormView.extend({
+    CollectionFieldSetView = exports.CollectionFieldSetView = CollectionFormView.extend({
         tagName: 'div',
         template: _.template('<% if(obj && obj.label) { %><p><strong><%= obj.label %></strong></p><% } %>' +
             '<fieldset class="fieldset" data-rows=""></fieldset>'),
@@ -1514,10 +1515,38 @@
         /**
          * Returns a prefix that the fieldset fields can use to create
          * their unique names and ids
-         * @memberOf Backbone.CollectionFieldSetView#
+         * @memberOf CollectionFieldSetView#
          * @return {string}
          */
         getFieldPrefix: getFieldPrefix
     });
 
-}(this));
+    FormView.prototype.fieldAlias = {
+        'Text' : fields.FieldView,
+        'RadioList' : fields.RadioListView,
+        'CheckList' : fields.CheckListView,
+        'Select' : fields.SelectListView,
+        'FieldSet' : FieldSetView,
+        'Checkbox' : fields.CheckBoxView,
+        'CollectionField' : CollectionFieldSetView
+    };
+
+    // moved from dibs-backbone.js
+    exports.FormView.prototype.className = 'form-horizontal form-horizontal-default';
+    exports.fields.FieldView.prototype.classDefaults = 'form-group form-field';
+    exports.fields.FieldView.prototype.template = _.template(
+        '<% if (obj.label) { %><label class="control-label" ' +
+            '<% if (obj.inputId) { %> for="<%= obj.inputId %>" <% } %> >' +
+            '<%= obj.label %></label><% } %>' +
+            '<div class="controls-wrapper">' +
+            '   <div class="controls" data-input=""></div>' +
+            '<div class="controls">' +
+            '<div class="text-error" data-error=""></div>' +
+            '<% if (obj.help) { %><span class="help-block"><%= obj.help %></span><% } %>' +
+            '</div>'
+    );
+    // moved from jquery-shim
+    var checkVals = { checkedVal: 'Y', unCheckedVal: 'N' };
+    _.extend(exports.fields.CheckListView.prototype, checkVals);
+    _.extend(exports.fields.CheckBoxView.prototype, checkVals);
+});
